@@ -45,8 +45,8 @@ export function HistoryModal({ show, handleClose, settings }: BaseModalPropsWith
                                                 </span>
                                                 <span>
                                                     {settings.timeFormat ?
-                                                        format(toDate(createdAt).toLocaleString(), settings.timeFormat)
-                                                        : toDate(createdAt).getUTCDate()
+                                                        format(createdAt, settings.timeFormat)
+                                                        : toDate(createdAt).toLocaleTimeString()
                                                     }
                                                 </span>
                                             </Col>
@@ -78,8 +78,6 @@ export function HistoryModal({ show, handleClose, settings }: BaseModalPropsWith
                         })}
                 </ListGroup>
             </Modal.Body>
-            <Modal.Footer>
-            </Modal.Footer>
         </Modal >
     )
 }
