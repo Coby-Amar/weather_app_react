@@ -8,12 +8,21 @@ class WeatherAPIService {
         })
         return result.data as WeatherDetails
     }
-    async getWeatherDetails(lat:number, lon:number)  {
-        const result = await HttpService.post('/weather', {
+    async getCurrentWeatherForcast(lat:number, lon:number): Promise<ForcastWeatherDetails>  {
+        const result = await HttpService.get('/forcast/current', {
+            params: {
+                lat,
+                lon
+            }
+        })
+        return result.data as ForcastWeatherDetails
+    }
+    async getWeatherForcast(lat:number, lon:number)  {
+        const result = await HttpService.post('/forcast', {
             lat,
             lon
         })
-        console.log('result: ', result)
+        return result.data as ForcastWeatherDetails
     }
 }
 

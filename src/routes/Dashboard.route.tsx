@@ -1,54 +1,87 @@
-import { Col, Container, Nav, Row } from "react-bootstrap";
+import { Container, NavLink, Row } from "react-bootstrap";
 import { WeatherService } from "../services/weather.service";
 import ReactGoogleAutocomplete from "react-google-autocomplete";
 import { useCallback, useEffect, useState } from "react";
-import { LoginModal } from "../components/Login.modal";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLoaderData, useNavigate } from "react-router-dom";
 import { AuthService } from "../services/auth.service";
-
+import { ConstsService } from "../services/consts.service";
+import { CurrentWeatherComponent } from "../components/CurrentWeather.component";
+import { NavigationComponent } from "../components/Navigation.component";
+import { LoginRegisterModal } from "../components/modals/LoginRegister.modal";
+import { HistoryModal } from "../components/modals/History.modal";
+import { ForcastWeatherComponent } from "../components/ForcastWeather.component";
+import { AreYouSureModal } from "../components/modals/AreYouSure.modal";
+import { SettingsModal } from "../components/modals/Settings.modal";
+import { useModals } from "../hooks/useModals.hook";
+import { UserService } from "../services/user.service";
+import { useSettings } from "../hooks/useSettings.hook";
 
 export function DashboardRoute() {
+    const [weatherDetails, setWeatherDetails] = useState<WeatherDetails | ForcastWeatherDetails | null>(null)
+    const [forcastWeatherDetails, setForcastWeatherDetails] = useState<ForcastWeatherDetails | null>(null)
+    const [user, setUser] = useState<User | null>(useLoaderData() as User | null)
     useEffect(() => {
-        navigator.geolocation.getCurrentPosition(async ({ coords: { latitude, longitude } }) => {
-            const data = await WeatherService.getCurrentWeather(latitude, longitude)
-            setWeatherDetails(data)
-        })
-    }, [])
-    const location = useLocation()
-    const [showLogin, setShowLogin] = useState(false)
-    useEffect(() => {
-        const hash = location.hash
-        if (hash.includes('login') || hash.includes('register')) {
-            setShowLogin(true)
+        if (user) {
+            if (!forcastWeatherDetails) {
+                navigator.geolocation.getCurrentPosition(async ({ coords: { latitude, longitude } }) => {
+                    try {
+                        const data = await WeatherService.getCurrentWeatherForcast(latitude, longitude)
+                        setForcastWeatherDetails(data)
+                        setWeatherDetails(data)
+                    } catch (error) {
+                        console.error('error: ', error)
+                    }
+                })
+            }
+        } else if (!weatherDetails) {
+            navigator.geolocation.getCurrentPosition(async ({ coords: { latitude, longitude } }) => {
+                try {
+                    const data = await WeatherService.getCurrentWeather(latitude, longitude)
+                    setWeatherDetails(data)
+                } catch (error) {
+                    console.error('error: ', error)
+                }
+            })
         }
-    }, [location.hash])
-    const [weatherDetails, setWeatherDetails] = useState<WeatherDetails | null>(null)
+    }, [forcastWeatherDetails, user, weatherDetails])
+
+    const [modals, locationHash] = useModals(!!user)
+    const [settings, settingsSetters] = useSettings(!!user)
     const navigate = useNavigate()
     const handleClose = useCallback(() => {
-        setShowLogin(false)
         navigate('')
     }, [navigate])
-    const handleLogin = useCallback((data: LoginRegister) => {
-        console.log('data: ', data)
-        // const isLogin = location.hash.includes('login')
-        // if (isLogin) {
-        //     AuthService.login(data)
-        // } else {
-        //     AuthService.register(data)
-        // }
+    const handleAreYouSure = useCallback(async () => {
+        try {
+            const isLogout = locationHash.includes(ConstsService.LOGOUT)
+            const apiCall = isLogout ? AuthService.logout : UserService.deleteUser
+            await apiCall()
+            setForcastWeatherDetails(null)
+            settingsSetters.reset()
+            setUser(null)
+        } catch (error) {
+            console.error('error: ', error)
+        }
         handleClose()
-    }, [handleClose, location.hash])
+    }, [handleClose, locationHash, settingsSetters])
+    const handleLoginRegisterSubmit = useCallback(async (data: LoginRegister) => {
+        const isLogin = locationHash.includes(ConstsService.LOGIN)
+        try {
+            const apiCall = isLogin ? AuthService.login : AuthService.register
+            const user = await apiCall(data)
+            setUser(user)
+        } catch (error) {
+            console.error('error: ', error)
+        }
+        handleClose()
+    }, [handleClose, locationHash])
+
     return (
-        <Container>
+        <Container className="bg-light-subtle p-0 h-100">
             <Row>
-                <header className="d-flex justify-content-between">
-                    Welcome to the weather app
-                    <LoginModal show={showLogin} handleClose={handleClose} handleLogin={handleLogin} />
-                    <Nav >
-                        <Nav.Link href="#login">Login</Nav.Link>
-                        <Nav.Link href="#register">Register</Nav.Link>
-                    </Nav>
-                </header>
+                <NavigationComponent
+                    user={user}
+                />
             </Row>
             <Row>
                 <ReactGoogleAutocomplete
@@ -57,33 +90,63 @@ export function DashboardRoute() {
                     libraries={['places']}
                     options={{ fields: ['geometry.location'] }}
                     onPlaceSelected={async ({ geometry: { location: { lat, lng } } }) => {
-                        const data = await WeatherService.getCurrentWeather(lat(), lng())
-                        console.log('data: ', data)
-                        setWeatherDetails(data)
+                        try {
+                            if (user) {
+                                const data = await WeatherService.getWeatherForcast(lat(), lng())
+                                setForcastWeatherDetails(data)
+                                setWeatherDetails(data)
+                            } else {
+                                const data = await WeatherService.getCurrentWeather(lat(), lng())
+                                setWeatherDetails(data)
+                            }
+                        } catch (error) {
+                            console.error('error: ', error)
+                        }
                     }}
                 />
+                {!user &&
+                    <p>
+                        *Want weekly forecasts, history and more? <NavLink
+                            className="d-inline text-info-emphasis fw-semibold"
+                            href={"#" + ConstsService.REGISTER}
+                        >
+                            Register here
+                        </NavLink>
+                    </p>
+                }
             </Row>
-            <Row>
-                <p className="fs-1">{weatherDetails?.location.name}, {weatherDetails?.location.region}</p>
-            </Row>
-            <Row style={{ backgroundColor: "whitesmoke" }} className="p-2">
-                <Col className="d-flex flex-row align-items-center">
-                    <img
-                        src={weatherDetails?.current.condition.icon}
-                        alt={weatherDetails?.current.condition.text}
-                        className="img-fluid"
-                    />
-                    <span className="fs-2">{weatherDetails?.current.condition.text}</span>
-                </Col>
-                <Col sm="auto" className="d-flex align-items-center">
-                    <span className="fs-2">{weatherDetails?.current.temp_f}  °f</span>
-                </Col>
-                <Col sm="auto" className="d-flex flex-column justify-content-center align-items-center">
-                    <span className="fs-6">Wind: {weatherDetails?.current.wind_mph} mph</span>
-                    <span className="fs-6">Precip: {weatherDetails?.current.precip_in} in</span>
-                    <span className="fs-6">Pressure: {weatherDetails?.current.pressure_in} in</span>
-                </Col>
-            </Row>
-        </Container>
+            {weatherDetails &&
+                <>
+                    <Row>
+                        <p className="fs-1">{weatherDetails.location.name}, {weatherDetails.location.region}</p>
+                    </Row>
+                    <CurrentWeatherComponent settings={settings} {...weatherDetails.current} />
+                </>
+            }
+            {forcastWeatherDetails &&
+                <ForcastWeatherComponent settings={settings} {...forcastWeatherDetails} />
+            }
+            <SettingsModal
+                show={modals.settings}
+                handleClose={handleClose}
+                setting={settings}
+                {...settingsSetters}
+            />
+            <AreYouSureModal
+                show={modals.areYouSure}
+                handleClose={handleClose}
+                handleSubmit={handleAreYouSure}
+            />
+            <LoginRegisterModal
+                show={modals.loginRegister}
+                handleClose={handleClose}
+                handleSubmit={handleLoginRegisterSubmit}
+            />
+            <HistoryModal
+                show={modals.history}
+                handleClose={handleClose}
+                settings={settings}
+            />
+        </Container >
     )
 }

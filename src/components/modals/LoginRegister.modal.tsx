@@ -1,28 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Form, InputGroup, Modal, NavLink } from "react-bootstrap";
 import { EyeFill, EyeSlashFill } from "react-bootstrap-icons";
 import { useLocation } from "react-router-dom";
-
-interface LoginModalProps {
-    show: boolean
-    handleClose: VoidFunction
-    handleLogin(data: LoginRegister): void
-}
+import { ConstsService } from "../../services/consts.service";
 
 const initalFormState = { username: '', password: '', confirmPassword: '', showPassword: false, showConfirmPassword: false }
 
-export function LoginModal({ show, handleClose, handleLogin }: LoginModalProps) {
-    const location = useLocation()
+export function LoginRegisterModal({ show, handleClose, handleSubmit }: LoginRegisterModalProps) {
     const [formState, setFormState] = useState({ ...initalFormState })
+    useEffect(() => {
+        setFormState({ ...initalFormState })
+    }, [show])
+    const location = useLocation()
     const name = location.hash.slice(1) ?? ''
-    const isLogin = name === 'login'
-    const isRegister = !isLogin
+    const isLogin = name === ConstsService.LOGIN
+    const isRegister = name === ConstsService.REGISTER
     const title = name.charAt(0).toLocaleUpperCase() + name.slice(1)
     return (
         <Modal show={show} onHide={handleClose}>
             <Form className="justify-content-md-center" onSubmit={(e) => {
                 e.preventDefault()
-                handleLogin(formState)
+                handleSubmit(formState)
             }}>
                 <Modal.Header closeButton>
                     <Modal.Title>{title}</Modal.Title>
@@ -31,7 +29,7 @@ export function LoginModal({ show, handleClose, handleLogin }: LoginModalProps) 
                     <Form.Group className="mb-3" controlId="formGroupEmail">
                         <Form.Label>Username</Form.Label>
                         <Form.Control
-                            type="email"
+                            type="text"
                             placeholder="Enter username"
                             aria-describedby="usernameHelpBlock"
                             value={formState.username}
@@ -43,7 +41,9 @@ export function LoginModal({ show, handleClose, handleLogin }: LoginModalProps) 
                         />
                         {isRegister &&
                             <Form.Text id="usernameHelpBlock">
-                                Your username <span className="fw-bold text-success">must</span> be a <span className="fw-bold text-info">valid</span> email address.
+                                Your username <span className="fw-bold text-success">must</span> be <span className="fw-bold">
+                                    4-20 characters long.
+                                </span> It should <span className="fw-bold text-danger">not</span> contain special characters, spaces or emojis.
                             </Form.Text>
                         }
                     </Form.Group>
@@ -51,7 +51,7 @@ export function LoginModal({ show, handleClose, handleLogin }: LoginModalProps) 
                         <Form.Label>Password</Form.Label>
                         <InputGroup>
                             <Form.Control
-                                placeholder="Password"
+                                placeholder="Enter password"
                                 aria-describedby="passwordHelpBlock"
                                 type={formState.showPassword ? 'text' : 'password'}
                                 value={formState.password}
@@ -67,7 +67,9 @@ export function LoginModal({ show, handleClose, handleLogin }: LoginModalProps) 
                         </InputGroup>
                         {isRegister &&
                             <Form.Text id="passwordHelpBlock">
-                                Your password <span className="fw-bold text-success">must</span> be 8-20 characters long, contain lower and capital letters, numbers, and special characters.
+                                Your password <span className="fw-bold text-success">must</span> be <span className="fw-bold">
+                                    8-20 characters long
+                                </span>, contain lower and capital letters, numbers, and special characters.
                                 It should <span className="fw-bold text-danger">not</span> contain spaces or emojis.
                             </Form.Text>
                         }
@@ -77,7 +79,7 @@ export function LoginModal({ show, handleClose, handleLogin }: LoginModalProps) 
                             <Form.Label>Confirm password</Form.Label>
                             <InputGroup className="mb-3">
                                 <Form.Control
-                                    placeholder="Confirm password"
+                                    placeholder="Re-enter password"
                                     aria-describedby="confirmPasswordHelpBlock"
                                     type={formState.showConfirmPassword ? 'text' : 'password'}
                                     value={formState.confirmPassword}
@@ -92,11 +94,11 @@ export function LoginModal({ show, handleClose, handleLogin }: LoginModalProps) 
                                 </InputGroup.Text>
                             </InputGroup>
                             <Form.Text id="confirmPasswordHelpBlock">
-                                Re-enter password
+                                Re-enter password to confirm
                             </Form.Text>
                         </Form.Group>
                     }
-                    {isLogin ?
+                    {isLogin &&
                         <em>
                             Don't have an account? <NavLink
                                 className="d-inline text-info-emphasis fw-semibold"
@@ -105,7 +107,8 @@ export function LoginModal({ show, handleClose, handleLogin }: LoginModalProps) 
                                 Register here
                             </NavLink>
                         </em>
-                        :
+                    }
+                    {isRegister &&
                         <em>
                             Have an account? <NavLink
                                 className="d-inline text-info-emphasis fw-semibold"
