@@ -28,6 +28,11 @@ declare interface SettingsModalFormData extends FormData {
     formGroupDate: string                    
 }
 
+type GooglePlacesCallback = (places: google.maps.places.PlaceResult, ref: React.RefObject<HTMLInputElement>, autocompleteRef: React.RefObject<google.maps.places.Autocomplete>) => void
+declare interface SearchBarComponentProps {
+    onPlaceSelected: GooglePlacesCallback
+}
+
 declare interface NavigationComponentProps {
     user: User | null
 }

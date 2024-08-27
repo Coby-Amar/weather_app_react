@@ -15,8 +15,8 @@ export function useModals(loggedIn= false): [ModalsState, string] {
     useEffect(() => {
         const nextModalsState = { ...initModalsState }
             switch (hash) {
-                case RoutesService.loginHash:
-                case RoutesService.registerHash:
+                case !loggedIn && RoutesService.loginHash:
+                case !loggedIn && RoutesService.registerHash:
                     nextModalsState.loginRegister = true
                     break
                 case !loggedIn && hash: 

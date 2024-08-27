@@ -1,6 +1,5 @@
 import { Container, NavLink, Row } from "react-bootstrap";
 import { WeatherService } from "../services/weather.service";
-import ReactGoogleAutocomplete from "react-google-autocomplete";
 import { useCallback, useEffect, useState } from "react";
 import { useLoaderData, useNavigate } from "react-router-dom";
 import { AuthService } from "../services/auth.service";
@@ -15,9 +14,11 @@ import { SettingsModal } from "../components/modals/Settings.modal";
 import { useModals } from "../hooks/useModals.hook";
 import { UserService } from "../services/user.service";
 import { useSettings } from "../hooks/useSettings.hook";
+import { SearchBarComponent } from "../components/SearchBar.component";
+import { RoutesService } from "../services/routes.service";
 
 export function DashboardRoute() {
-    const [weatherDetails, setWeatherDetails] = useState<WeatherDetails | ForcastWeatherDetails | null>(null)
+    const [weatherDetails, setWeatherDetails] = useState<WeatherDetails | null>(null)
     const [forcastWeatherDetails, setForcastWeatherDetails] = useState<ForcastWeatherDetails | null>(null)
     const [user, setUser] = useState<User | null>(useLoaderData() as User | null)
     useEffect(() => {
@@ -53,7 +54,7 @@ export function DashboardRoute() {
     }, [navigate])
     const handleAreYouSure = useCallback(async () => {
         try {
-            const isLogout = locationHash.includes(ConstsService.LOGOUT)
+            const isLogout = locationHash === RoutesService.logoutHash
             const apiCall = isLogout ? AuthService.logout : UserService.deleteUser
             await apiCall()
             setForcastWeatherDetails(null)
@@ -65,7 +66,7 @@ export function DashboardRoute() {
         handleClose()
     }, [handleClose, locationHash, settingsSetters])
     const handleLoginRegisterSubmit = useCallback(async (data: LoginRegister) => {
-        const isLogin = locationHash.includes(ConstsService.LOGIN)
+        const isLogin = locationHash === RoutesService.loginHash
         try {
             const apiCall = isLogin ? AuthService.login : AuthService.register
             const user = await apiCall(data)
@@ -75,6 +76,18 @@ export function DashboardRoute() {
         }
         handleClose()
     }, [handleClose, locationHash])
+    const onPlaceSelected = useCallback<GooglePlacesCallback>(async ({ geometry: { location: { lat, lng } } }) => {
+        try {
+            const apiCall = user ? WeatherService.getWeatherForcast : WeatherService.getCurrentWeather
+            const data = await apiCall(lat(), lng())
+            if (user) {
+                setForcastWeatherDetails(data as ForcastWeatherDetails)
+            }
+            setWeatherDetails(data)
+        } catch (error) {
+            console.error('error: ', error)
+        }
+    }, [user])
 
     return (
         <Container className="bg-light-subtle p-0 h-100">
@@ -84,26 +97,7 @@ export function DashboardRoute() {
                 />
             </Row>
             <Row>
-                <ReactGoogleAutocomplete
-                    placeholder="Search cities"
-                    apiKey={import.meta.env.VITE_GOOGLE_API_KEY}
-                    libraries={['places']}
-                    options={{ fields: ['geometry.location'] }}
-                    onPlaceSelected={async ({ geometry: { location: { lat, lng } } }) => {
-                        try {
-                            if (user) {
-                                const data = await WeatherService.getWeatherForcast(lat(), lng())
-                                setForcastWeatherDetails(data)
-                                setWeatherDetails(data)
-                            } else {
-                                const data = await WeatherService.getCurrentWeather(lat(), lng())
-                                setWeatherDetails(data)
-                            }
-                        } catch (error) {
-                            console.error('error: ', error)
-                        }
-                    }}
-                />
+                <SearchBarComponent onPlaceSelected={onPlaceSelected} />
                 {!user &&
                     <p>
                         *Want weekly forecasts, history and more? <NavLink
