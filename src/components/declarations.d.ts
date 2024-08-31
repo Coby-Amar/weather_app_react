@@ -28,7 +28,8 @@ declare interface SettingsModalFormData extends FormData {
     formGroupDate: string                    
 }
 
-type GooglePlacesCallback = (places: google.maps.places.PlaceResult, ref: React.RefObject<HTMLInputElement>, autocompleteRef: React.RefObject<google.maps.places.Autocomplete>) => void
+type GooglePlace = google.maps.places.PlaceResult
+type GooglePlacesCallback = (places: GooglePlace, ref?: React.RefObject<HTMLInputElement>, autocompleteRef?: React.RefObject<google.maps.places.Autocomplete>) => void
 declare interface SearchBarComponentProps {
     onPlaceSelected: GooglePlacesCallback
 }
@@ -43,4 +44,9 @@ declare interface CurrentWeatherComponentProps extends CurrentWeatherDetails {
 
 declare interface ForcastWeatherComponentProps extends ForcastWeatherDetails {
     settings: SettingsState
+}
+
+declare interface GoogleAutoCompleteItem {
+    description: string
+    onSelect: VoidFunction
 }

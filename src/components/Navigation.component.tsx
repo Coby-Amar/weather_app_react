@@ -27,8 +27,8 @@ export function NavigationComponent({ user }: NavigationComponentProps) {
                             </>
                             :
                             <>
-                                <Nav.Link href={RoutesService.loginHash}>Login</Nav.Link>
-                                <Nav.Link href={RoutesService.registerHash}>Register</Nav.Link>
+                                <Nav.Link active href={RoutesService.loginHash}>Login</Nav.Link>
+                                <Nav.Link active href={RoutesService.registerHash}>Register</Nav.Link>
                             </>
                         }
                     </Nav>

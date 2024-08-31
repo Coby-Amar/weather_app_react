@@ -3,3 +3,7 @@
   width: 100vw;
   padding: 1rem 1.5rem;
 }
+
+.hightlight:hover {
+  background-color: var(--bs-secondary-bg) !important;
+}

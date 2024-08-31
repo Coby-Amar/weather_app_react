@@ -50,7 +50,7 @@ export function DashboardRoute() {
     const [settings, settingsSetters] = useSettings(!!user)
     const navigate = useNavigate()
     const handleClose = useCallback(() => {
-        navigate('')
+        navigate(-1)
     }, [navigate])
     const handleAreYouSure = useCallback(async () => {
         try {
