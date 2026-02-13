@@ -8,8 +8,6 @@ RUN npm i
 
 CMD [ "npm", "run", "dev", "--", "--host" ]
 
-# docker build . -t cobyamar/weather_app_react:1.0.0 --build-arg VITE_GOOGLE_API_KEY=$VITE_GOOGLE_API_KEY --build-arg VITE_BASE_URL=$VITE_BASE_URL --push
-
 FROM node:24-slim AS builder 
 
 WORKDIR /app
