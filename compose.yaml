@@ -8,11 +8,10 @@ services:
     ports: 
       - 8000:8000
     volumes:
-      - ../weather_app_api_node/:/app
+      - ../weather_app_api_node:/app
       - /app/node_modules/
-    environment:
-      - PORT=8000
-
+    env_file:
+      - ../weather_app_api_node/.env.development
   web:
     build:
       context: ./
