@@ -27,3 +27,23 @@ services:
     volumes:
       - ./:/app:delegated
       - /app/node_modules/
+  api-prod:
+    image: cobyamar/weather_app_api_node:1.0.0
+    build:
+      context: ../weather_app_api_node
+      dockerfile: ../weather_app_api_node/Dockerfile
+      target: prod
+    ports: 
+      - 80:80
+    env_file:
+      - ../weather_app_api_node/.env.production
+  web-prod:
+    image: cobyamar/weather_app_react:1.0.0
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: prod
+    ports: 
+      - 3000:3000
+    depends_on:
+      - api-prod
