@@ -6,7 +6,14 @@ export function NavigationComponent({ user }: NavigationComponentProps) {
     return (
         <Navbar expand="lg" className="bg-body-tertiary">
             <Container>
-                <Navbar.Brand>Welcome to the weather app built using <span className="text-info-emphasis">ReactJS</span> and <span className="text-info-emphasis">Node</span></Navbar.Brand>
+                <Navbar.Brand><img
+                    src="/portfolio-logo.png"
+                    width="30"
+                    height="30"
+                    className="d-inline-block align-top me-1"
+                    loading='lazy'
+                    alt="portfolio logo"
+                />Welcome to the weather app built using <span className="text-info-emphasis">ReactJS</span> and <span className="text-info-emphasis">Node</span></Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end">
                     <Nav>
