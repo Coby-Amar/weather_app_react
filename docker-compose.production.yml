@@ -1,0 +1,12 @@
+include: 
+  - ../weather_app_api_node/docker-compose.production.yml
+services:
+  frontend:
+    image: cobyamar/weather_app_react:1.0.1
+    build:
+      context: ./
+      target: prod
+    ports: 
+      - 3000:3000
+    depends_on:
+      - backend

@@ -1,4 +1,4 @@
-FROM node:25-alpine3.23 AS dev 
+FROM node:24.6-alpine3.22 AS dev 
 WORKDIR /app
 COPY ./package*.json .
 RUN npm i
@@ -14,7 +14,7 @@ RUN npm prune --omit=dev
 
 FROM node:25.6-alpine AS prod
 WORKDIR /app
-COPY --from=builder /app/react-node ./
+COPY --from=builder /app/dist ./
 RUN npm i -g serve
 EXPOSE 3000
 CMD [ "serve", "-s", ".", "-p", "3000" ]
